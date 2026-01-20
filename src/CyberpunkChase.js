@@ -29,6 +29,7 @@ const CyberpunkChase = () => {
   const [canShoot, setCanShoot] = useState(true);
   const [gameDimensions, setGameDimensions] = useState({ width: BASE_WIDTH, height: BASE_HEIGHT, scale: 1 });
   const [isMobile, setIsMobile] = useState(false);
+  const [difficulty, setDifficulty] = useState(null); // 'easy', 'normal', 'hard'
   const gameLoopRef = useRef(null);
   const lastTimeRef = useRef(0);
   const containerRef = useRef(null);
@@ -64,18 +65,19 @@ const CyberpunkChase = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const resetGame = () => {
+  const startGame = (diff) => {
+    setDifficulty(diff);
     setPlayer({ x: 100, y: 300, vy: 0, isJumping: false, isSliding: false });
     setObstacles([]);
     setParticles([]);
     setScore(0);
     setDistance(0);
-    setSpeed(INITIAL_SPEED);
+    setSpeed(diff === 'hard' ? INITIAL_SPEED + 2 : INITIAL_SPEED);
     setFederico({ x: 700, y: 300, frame: 0 });
     setBoss(null);
     setBossHealth(0);
     setBossNumber(0);
-    setPlayerHealth(3);
+    setPlayerHealth(diff === 'hard' ? 2 : 3);
     setPowerUp(null);
     setHasShield(false);
     setCoins([]);
@@ -83,6 +85,10 @@ const CyberpunkChase = () => {
     setProjectiles([]);
     setCanShoot(true);
     setGameState('playing');
+  };
+
+  const resetGame = () => {
+    startGame(difficulty || 'normal');
   };
 
   const jump = useCallback(() => {
@@ -108,13 +114,28 @@ const CyberpunkChase = () => {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Difficulty selection in menu
+      if (gameState === 'menu') {
+        if (e.code === 'Digit1' || e.code === 'Numpad1') {
+          e.preventDefault();
+          startGame('easy');
+          return;
+        }
+        if (e.code === 'Digit2' || e.code === 'Numpad2' || e.code === 'Space') {
+          e.preventDefault();
+          startGame('normal');
+          return;
+        }
+        if (e.code === 'Digit3' || e.code === 'Numpad3') {
+          e.preventDefault();
+          startGame('hard');
+          return;
+        }
+      }
+
       if (e.code === 'Space' || e.code === 'ArrowUp') {
         e.preventDefault();
-        if (gameState === 'menu') {
-          resetGame();
-        } else {
-          jump();
-        }
+        jump();
       }
       if (e.code === 'ArrowDown') {
         e.preventDefault();
@@ -357,9 +378,11 @@ const CyberpunkChase = () => {
             playerBox.y < o.y + o.height &&
             playerBox.y + playerBox.height > o.y
           ) {
-            if (hasShield) {
+            if (difficulty === 'easy') {
+              // Immortale in modalità facile - solo effetto visivo
+              o.x = -100;
+            } else if (hasShield) {
               setHasShield(false);
-              // Remove the obstacle that was hit
               o.x = -100;
             } else {
               setPlayerHealth(h => {
@@ -378,7 +401,7 @@ const CyberpunkChase = () => {
                 vx: (Math.random() - 0.5) * 5,
                 vy: (Math.random() - 0.5) * 5,
                 life: 15,
-                color: '#ff0000'
+                color: difficulty === 'easy' ? '#00ff00' : '#ff0000'
               }]);
             }
           }
@@ -417,7 +440,7 @@ const CyberpunkChase = () => {
         cancelAnimationFrame(gameLoopRef.current);
       }
     };
-  }, [gameState, speed, player, boss, bossNumber, hasShield, powerUp]);
+  }, [gameState, speed, player, boss, bossNumber, hasShield, powerUp, difficulty]);
 
   const getSkyGradient = () => {
     const t = timeOfDay;
@@ -740,20 +763,51 @@ const CyberpunkChase = () => {
         {gameState === 'menu' && (
           <g>
             <rect x="0" y="0" width={GAME_WIDTH} height={GAME_HEIGHT} fill="rgba(0,0,0,0.8)"/>
-            <text x={GAME_WIDTH/2} y="100" textAnchor="middle" fill="#ff00ff" fontSize="36" fontFamily="monospace">
+            <text x={GAME_WIDTH/2} y="70" textAnchor="middle" fill="#ff00ff" fontSize="32" fontFamily="monospace">
               LA CACCIA ALLA BORRACCIA
             </text>
-            <text x={GAME_WIDTH/2} y="150" textAnchor="middle" fill="#00ffff" fontSize="18" fontFamily="monospace">
+            <text x={GAME_WIDTH/2} y="105" textAnchor="middle" fill="#00ffff" fontSize="16" fontFamily="monospace">
               ~ Cyberpunk Edition ~
             </text>
-            <text x={GAME_WIDTH/2} y="220" textAnchor="middle" fill="#ffffff" fontSize="14" fontFamily="monospace">
+            <text x={GAME_WIDTH/2} y="150" textAnchor="middle" fill="#ffffff" fontSize="12" fontFamily="monospace">
               Federico ha rubato la borraccia a Francesca!
             </text>
-            <text x={GAME_WIDTH/2} y="270" textAnchor="middle" fill="#aaa" fontSize="12" fontFamily="monospace">
+            <text x={GAME_WIDTH/2} y="190" textAnchor="middle" fill="#ffd700" fontSize="14" fontFamily="monospace">
+              Scegli la difficoltà:
+            </text>
+            {/* Difficulty buttons */}
+            <g onClick={() => startGame('easy')} style={{ cursor: 'pointer' }}>
+              <rect x={GAME_WIDTH/2 - 120} y="210" width="70" height="35" fill="#00ff00" rx="5" opacity="0.8"/>
+              <text x={GAME_WIDTH/2 - 85} y="233" textAnchor="middle" fill="#000" fontSize="12" fontFamily="monospace" fontWeight="bold">
+                FACILE
+              </text>
+            </g>
+            <g onClick={() => startGame('normal')} style={{ cursor: 'pointer' }}>
+              <rect x={GAME_WIDTH/2 - 35} y="210" width="70" height="35" fill="#ffff00" rx="5" opacity="0.8"/>
+              <text x={GAME_WIDTH/2} y="233" textAnchor="middle" fill="#000" fontSize="12" fontFamily="monospace" fontWeight="bold">
+                NORMALE
+              </text>
+            </g>
+            <g onClick={() => startGame('hard')} style={{ cursor: 'pointer' }}>
+              <rect x={GAME_WIDTH/2 + 50} y="210" width="70" height="35" fill="#ff0000" rx="5" opacity="0.8"/>
+              <text x={GAME_WIDTH/2 + 85} y="233" textAnchor="middle" fill="#fff" fontSize="12" fontFamily="monospace" fontWeight="bold">
+                DIFFICILE
+              </text>
+            </g>
+            <text x={GAME_WIDTH/2 - 85} y="260" textAnchor="middle" fill="#00ff00" fontSize="8" fontFamily="monospace">
+              Immortale
+            </text>
+            <text x={GAME_WIDTH/2} y="260" textAnchor="middle" fill="#ffff00" fontSize="8" fontFamily="monospace">
+              3 vite
+            </text>
+            <text x={GAME_WIDTH/2 + 85} y="260" textAnchor="middle" fill="#ff6666" fontSize="8" fontFamily="monospace">
+              2 vite + veloce
+            </text>
+            <text x={GAME_WIDTH/2} y="300" textAnchor="middle" fill="#aaa" fontSize="10" fontFamily="monospace">
               ⬆️/SPAZIO = Salta | ⬇️ = Scivolata | X = Spara
             </text>
-            <text x={GAME_WIDTH/2} y="320" textAnchor="middle" fill="#00ff00" fontSize="16" fontFamily="monospace">
-              Premi SPAZIO per iniziare
+            <text x={GAME_WIDTH/2} y="330" textAnchor="middle" fill="#888" fontSize="10" fontFamily="monospace">
+              Clicca una difficoltà o premi 1/2/3
             </text>
           </g>
         )}
@@ -839,13 +893,37 @@ const CyberpunkChase = () => {
         </div>
       )}
 
-      {/* Mobile start/restart button */}
-      {isMobile && (gameState === 'menu' || gameState === 'victory' || gameState === 'gameOver') && (
+      {/* Mobile difficulty selection */}
+      {isMobile && gameState === 'menu' && (
+        <div className="mt-4 flex gap-3">
+          <button
+            onTouchStart={(e) => { e.preventDefault(); startGame('easy'); }}
+            className="px-4 py-3 bg-green-500 active:bg-green-400 rounded-xl text-white font-bold text-sm shadow-lg transition-all active:scale-95"
+          >
+            🟢 FACILE
+          </button>
+          <button
+            onTouchStart={(e) => { e.preventDefault(); startGame('normal'); }}
+            className="px-4 py-3 bg-yellow-500 active:bg-yellow-400 rounded-xl text-black font-bold text-sm shadow-lg transition-all active:scale-95"
+          >
+            🟡 NORMALE
+          </button>
+          <button
+            onTouchStart={(e) => { e.preventDefault(); startGame('hard'); }}
+            className="px-4 py-3 bg-red-500 active:bg-red-400 rounded-xl text-white font-bold text-sm shadow-lg transition-all active:scale-95"
+          >
+            🔴 DIFFICILE
+          </button>
+        </div>
+      )}
+
+      {/* Mobile restart button */}
+      {isMobile && (gameState === 'victory' || gameState === 'gameOver') && (
         <button
           onTouchStart={(e) => handleTouchStart(e, 'jump')}
           className="mt-6 px-8 py-4 bg-gradient-to-r from-cyan-500 to-pink-500 rounded-xl text-white font-bold text-xl shadow-lg transition-all active:scale-95"
         >
-          {gameState === 'menu' ? '🎮 GIOCA' : '🔄 RIGIOCA'}
+          🔄 RIGIOCA
         </button>
       )}
 
