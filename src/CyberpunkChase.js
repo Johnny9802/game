@@ -86,13 +86,13 @@ const CyberpunkChase = () => {
   };
 
   const jump = useCallback(() => {
-    if (!player.isJumping && !player.isSliding && gameState === 'playing') {
+    if (!player.isJumping && !player.isSliding && (gameState === 'playing' || gameState === 'boss')) {
       setPlayer(p => ({ ...p, vy: JUMP_FORCE, isJumping: true }));
     }
   }, [player.isJumping, player.isSliding, gameState]);
 
   const slide = useCallback(() => {
-    if (!player.isJumping && !player.isSliding && gameState === 'playing') {
+    if (!player.isJumping && !player.isSliding && (gameState === 'playing' || gameState === 'boss')) {
       setPlayer(p => ({ ...p, isSliding: true }));
       setTimeout(() => setPlayer(p => ({ ...p, isSliding: false })), 500);
     }
