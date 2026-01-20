@@ -186,12 +186,12 @@ const CyberpunkChase = () => {
           if (bossNumber === 0 && newDist >= BOSS_1_DISTANCE) {
             setGameState('boss');
             setBoss({ x: 600, y: 250, type: 'drone', attackTimer: 0 });
-            setBossHealth(100);
+            setBossHealth(40);
             setBossNumber(1);
           } else if (bossNumber === 1 && newDist >= BOSS_2_DISTANCE) {
             setGameState('boss');
             setBoss({ x: 600, y: 200, type: 'mech', attackTimer: 0 });
-            setBossHealth(150);
+            setBossHealth(40);
             setBossNumber(2);
           } else if (newDist >= WIN_DISTANCE) {
             setGameState('victory');
@@ -520,7 +520,7 @@ const CyberpunkChase = () => {
           </rect>
           {/* Health bar */}
           <rect x="-40" y="-45" width="80" height="8" fill="#333" rx="2"/>
-          <rect x="-38" y="-43" width={76 * (bossHealth / 100)} height="4" fill="#ff0000" rx="1"/>
+          <rect x="-38" y="-43" width={76 * (bossHealth / 40)} height="4" fill="#ff0000" rx="1"/>
           <text x="0" y="-50" textAnchor="middle" fill="#ff00ff" fontSize="10" fontFamily="monospace">
             SECURITY DRONE
           </text>
@@ -543,7 +543,7 @@ const CyberpunkChase = () => {
           <rect x="35" y="55" width="25" height="10" fill="#ff6600"/>
           {/* Health bar */}
           <rect x="-40" y="-25" width="80" height="8" fill="#333" rx="2"/>
-          <rect x="-38" y="-23" width={76 * (bossHealth / 150)} height="4" fill="#ff0000" rx="1"/>
+          <rect x="-38" y="-23" width={76 * (bossHealth / 40)} height="4" fill="#ff0000" rx="1"/>
           <text x="0" y="-30" textAnchor="middle" fill="#ff00ff" fontSize="10" fontFamily="monospace">
             GUARDIAN MECH
           </text>
